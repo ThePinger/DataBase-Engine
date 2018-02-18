@@ -61,12 +61,15 @@ public class DBApp implements Serializable
 		{
 			//Creates DB directory
 			//Creates a HashSet of tables and saves it
+			this.dataBases.add(dataBase);
+			saveDB();
 			this.dataBaseTables = new HashSet<Table>();
 			saveTables();
 		}
 		
 	}
 	
+	//Loads The Tables in Current DB
 	@SuppressWarnings("unchecked")
 	public void loadTables() throws FileNotFoundException, IOException, ClassNotFoundException
 	{
@@ -76,6 +79,7 @@ public class DBApp implements Serializable
 		in.close();
 	}
 	
+	//Saves Tables in DB .class File
 	public void saveTables() throws FileNotFoundException, IOException
 	{
 		File dataBaseDir = new File(this.curDBFilePath);
