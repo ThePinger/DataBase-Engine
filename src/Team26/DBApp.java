@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 
 public class DBApp implements Serializable
 {
@@ -16,7 +18,7 @@ public class DBApp implements Serializable
 	private String curDBFilePath;
 	private String dataBasesDataFilePath = "data/DataBases/";
 	private HashSet<String> dataBases;
-	private HashSet<Table>  dataBaseTables;
+	private HashMap<String, Table>  dataBaseTables;
 	
 	public DBApp() throws FileNotFoundException, IOException, ClassNotFoundException
 	{
@@ -60,10 +62,10 @@ public class DBApp implements Serializable
 		else
 		{
 			//Creates DB directory
-			//Creates a HashSet of tables and saves it
+			//Creates a HashMap of tables and saves it
 			this.dataBases.add(dataBase);
 			saveDB();
-			this.dataBaseTables = new HashSet<Table>();
+			this.dataBaseTables = new HashMap<>();
 			saveTables();
 		}
 		
@@ -75,7 +77,7 @@ public class DBApp implements Serializable
 	{
 		File tablesFile = new File(this.curDBFilePath + "Tables.class");
 		ObjectInputStream in = new ObjectInputStream(new FileInputStream(tablesFile));
-		this.dataBaseTables = (HashSet<Table>) in.readObject();
+		this.dataBaseTables = (HashMap<String, Table>) in.readObject();
 		in.close();
 	}
 	
