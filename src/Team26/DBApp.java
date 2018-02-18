@@ -14,7 +14,7 @@ public class DBApp implements Serializable
 {
 	private String curDB;
 	private String curDBFilePath;
-	private String dataBasesDataFilePath = "/data/DataBases/DataBases.class";
+	private String dataBasesDataFilePath = "data/DataBases/";
 	private TreeSet<String> dataBases;
 	
 	public DBApp() throws FileNotFoundException, IOException, ClassNotFoundException
@@ -25,7 +25,7 @@ public class DBApp implements Serializable
 	@SuppressWarnings("unchecked")
 	public void loadDB() throws FileNotFoundException, IOException, ClassNotFoundException
 	{
-		File savedDataBases = new File(this.dataBasesDataFilePath);
+		File savedDataBases = new File(this.dataBasesDataFilePath + "DataBases.class");
 		if(savedDataBases.exists())
 		{
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(savedDataBases));
@@ -41,6 +41,8 @@ public class DBApp implements Serializable
 	public void save() throws FileNotFoundException, IOException
 	{
 		File dataBasesInfo = new File(this.dataBasesDataFilePath);
+		if(!dataBasesInfo.exists()) dataBasesInfo.mkdirs();
+		dataBasesInfo = new File(this.dataBasesDataFilePath + "DataBases.class");
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(dataBasesInfo));
 		out.writeObject(this.dataBases);
 	}
