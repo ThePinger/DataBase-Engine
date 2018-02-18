@@ -16,6 +16,7 @@ public class DBApp implements Serializable
 	private String curDBFilePath;
 	private String dataBasesDataFilePath = "data/DataBases/";
 	private HashSet<String> dataBases;
+	private HashSet<Table>  dataBaseTables;
 	
 	public DBApp() throws FileNotFoundException, IOException, ClassNotFoundException
 	{
@@ -47,6 +48,41 @@ public class DBApp implements Serializable
 		dataBasesInfo = new File(this.dataBasesDataFilePath + "DataBases.class");
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(dataBasesInfo));
 		out.writeObject(this.dataBases);
+		out.flush();
+		out.close();
+	}
+	
+	public void init(String dataBase) throws FileNotFoundException, IOException, ClassNotFoundException
+	{
+		this.curDB = dataBase;
+		this.curDBFilePath = "data/DataBases/" + this.curDB + "/";
+		if(this.dataBases.contains(dataBase)) loadTables();
+		else
+		{
+			//Creates DB directory
+			//Creates a HashSet of tables and saves it
+			this.dataBaseTables = new HashSet<Table>();
+			saveTables();
+		}
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void loadTables() throws FileNotFoundException, IOException, ClassNotFoundException
+	{
+		File tablesFile = new File(this.curDBFilePath + "Tables.class");
+		ObjectInputStream in = new ObjectInputStream(new FileInputStream(tablesFile));
+		this.dataBaseTables = (HashSet<Table>) in.readObject();
+		in.close();
+	}
+	
+	public void saveTables() throws FileNotFoundException, IOException
+	{
+		File dataBaseDir = new File(this.curDBFilePath);
+		if(!dataBaseDir.exists()) dataBaseDir.mkdirs();
+		dataBaseDir = new File(this.curDBFilePath + "Tables.class");
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(dataBaseDir));
+		out.writeObject(this.dataBaseTables);
 		out.flush();
 		out.close();
 	}
