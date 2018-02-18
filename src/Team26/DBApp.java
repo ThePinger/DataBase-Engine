@@ -8,14 +8,14 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.TreeSet;
+import java.util.HashSet;
 
 public class DBApp implements Serializable
 {
 	private String curDB;
 	private String curDBFilePath;
 	private String dataBasesDataFilePath = "data/DataBases/";
-	private TreeSet<String> dataBases;
+	private HashSet<String> dataBases;
 	
 	public DBApp() throws FileNotFoundException, IOException, ClassNotFoundException
 	{
@@ -29,21 +29,25 @@ public class DBApp implements Serializable
 		if(savedDataBases.exists())
 		{
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(savedDataBases));
-			this.dataBases = (TreeSet<String>) in.readObject();
+			this.dataBases = (HashSet<String>) in.readObject();
+			in.close();
 		}
 		else
 		{
-			this.dataBases = new TreeSet<String>();
-			save();
+			this.dataBases = new HashSet<String>();
+			saveDB();
 		}
 	}
 	
-	public void save() throws FileNotFoundException, IOException
+	//Saves HashSet of DB's
+	public void saveDB() throws FileNotFoundException, IOException
 	{
 		File dataBasesInfo = new File(this.dataBasesDataFilePath);
 		if(!dataBasesInfo.exists()) dataBasesInfo.mkdirs();
 		dataBasesInfo = new File(this.dataBasesDataFilePath + "DataBases.class");
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(dataBasesInfo));
 		out.writeObject(this.dataBases);
+		out.flush();
+		out.close();
 	}
 }
