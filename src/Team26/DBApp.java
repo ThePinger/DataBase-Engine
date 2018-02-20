@@ -92,4 +92,16 @@ public class DBApp implements Serializable
 		out.flush();
 		out.close();
 	}
+	
+	public void createTable(String strTableName, String strClusteringKeyColumn, Hashtable<String,String> htblColNameType ) throws DBAppException, FileNotFoundException, IOException
+	{
+		if(this.dataBaseTables.containsKey(strTableName))
+		{
+			System.out.println("You Have a Table with the Same name");
+			return;
+		}
+		
+		this.dataBaseTables.put(strTableName, new Table(strTableName, htblColNameType, strClusteringKeyColumn, this.curDB));
+		saveTables();
+	}
 }
