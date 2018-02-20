@@ -14,7 +14,7 @@ public class DBAppTest
 		Hashtable htblColNameType = new Hashtable( ); 
 		htblColNameType.put("id", "java.lang.Integer"); 
 		htblColNameType.put("name", "java.lang.String"); 
-		htblColNameType.put("gpa", "java.lang.double");
+		htblColNameType.put("gpa", "java.lang.Double");
 		app.init("Test1");
 		app.createTable( strTableName, "id", htblColNameType );
 		Hashtable<String, Object> htblColNameValue = new Hashtable<>( ); 
