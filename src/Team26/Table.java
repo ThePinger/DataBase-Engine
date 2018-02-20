@@ -136,13 +136,27 @@ public class Table implements Serializable
 		String keyType = null;
 		
 		int i = 0;
-		while(columnNames.hasMoreElements()) // Checks if all columns in the insertion are found in the table.
+		while(columnNames.hasMoreElements()) 
 		{
 			String column = columnNames.nextElement();
 			
+			// Checks if all columns in the insertion are found in the table.
 			if(!htblColNameValue.containsKey(column) && !column.equals("TouchDate"))
 			{
 				throw new DBAppException("Error: your insertion does not match the desired table's format.");
+			}
+			
+			// Checks if all fields in the insertion are of the correct type.
+			if(!column.equals("TouchDate"))
+			{
+				Object x = htblColNameValue.get(column);
+				String insertionClass = ((x.getClass() + "")).split(" ")[1];
+				String tableClass = this.tableFormat.get(column);
+				
+				if(!tableClass.equals(insertionClass))
+				{
+					throw new DBAppException("Error: One of the fields in your insertion does not have the right type.");
+				}
 			}
 			
 			recordData.add(htblColNameValue.get(column));
