@@ -120,6 +120,7 @@ public class DBApp implements Serializable
 		
 		Table targetTable = dataBaseTables.get(strTableName);
 		targetTable.insert(htblColNameValue);
+		saveTables();
 	}
 	
 	public static int getMaxRecordsInPage()
