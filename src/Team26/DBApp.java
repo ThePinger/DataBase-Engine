@@ -14,7 +14,7 @@ import java.util.Hashtable;
 
 public class DBApp implements Serializable
 {
-	private static final int maxRecordsInPage = 0; // will be read from config file upon initialization.
+	private static final int maxRecordsInPage = 1; // will be read from config file upon initialization.
 	private String curDB;
 	private String curDBFilePath;
 	private String dataBasesDataFilePath = "data/DataBases/";
@@ -126,5 +126,10 @@ public class DBApp implements Serializable
 	public static int getMaxRecordsInPage()
 	{
 		return maxRecordsInPage;
+	}
+	
+	public void print(String table) throws ClassNotFoundException, IOException
+	{
+		dataBaseTables.get(table).print();
 	}
 }

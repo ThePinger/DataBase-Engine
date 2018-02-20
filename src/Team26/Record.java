@@ -54,4 +54,12 @@ public class Record implements Serializable, Comparable<Record>
 	{
 		return recordData.get(this.keyIndex);
 	}
+	
+	public String toString()
+	{
+		String s = "";
+		for(Object o : this.recordData)
+			s += o + " ";
+		return s;
+	}
 }

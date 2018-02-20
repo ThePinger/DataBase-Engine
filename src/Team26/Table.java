@@ -167,4 +167,16 @@ public class Table implements Serializable
 		out.flush();
 		out.close();
 	}
+	
+	public void print() throws ClassNotFoundException, IOException
+	{
+		for(int i = 1; i <= numberOfPages; i++)
+		{
+			String currentPagePath = filePath + this.tableName + i + ".class";
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			System.out.println(in.readObject().toString());
+			in.close();
+		}
+	}
 }

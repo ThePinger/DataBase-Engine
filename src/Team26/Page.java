@@ -40,4 +40,11 @@ public class Page implements Serializable
 	{
 		return (TreeSet<Record>) records.clone();
 	}
+	
+	public String toString()
+	{
+		for(Record r : this.records)
+			return r.toString();
+		return "";
+	}
 }
