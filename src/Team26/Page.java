@@ -18,11 +18,12 @@ public class Page implements Serializable
 	public void add(Record r)
 	{
 		records.add(r);
+		this.numberOfRecords++;
 	}
 	
 	public Record getLast()
 	{
-		return records.last();
+		return records.pollLast();
 	}
 	
 	public int getSize()
