@@ -11,15 +11,17 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Properties;
 
 public class DBApp implements Serializable
 {
-	private static final int maxRecordsInPage = 1; // will be read from config file upon initialization.
+	private static int maxRecordsInPage = 0; // will be read from config file upon initialization.
 	private String curDB;
 	private String curDBFilePath;
 	private String dataBasesDataFilePath = "data/DataBases/";
 	private HashSet<String> dataBases;
 	private HashMap<String, Table>  dataBaseTables;
+	private Properties dataBaseProperties;
 	
 	public DBApp() throws FileNotFoundException, IOException, ClassNotFoundException
 	{
@@ -57,6 +59,7 @@ public class DBApp implements Serializable
 	
 	public void init(String dataBase) throws FileNotFoundException, IOException, ClassNotFoundException
 	{
+		readConfigFile();
 		this.curDB = dataBase;
 		this.curDBFilePath = "data/DataBases/" + this.curDB + "/";
 		if(this.dataBases.contains(dataBase)) loadTables();
@@ -121,6 +124,15 @@ public class DBApp implements Serializable
 		Table targetTable = dataBaseTables.get(strTableName);
 		targetTable.insert(htblColNameValue);
 		saveTables();
+	}
+	
+	public void readConfigFile() throws IOException
+	{
+		FileInputStream in = new FileInputStream("config/DBApp.config");
+		dataBaseProperties = new Properties();
+		dataBaseProperties.load(in);
+		in.close();
+		maxRecordsInPage = Integer.parseInt((String)dataBaseProperties.get("MaximumRowsCountinPage"));
 	}
 	
 	public static int getMaxRecordsInPage()
