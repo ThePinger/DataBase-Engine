@@ -14,6 +14,7 @@ import java.util.Hashtable;
 
 public class DBApp implements Serializable
 {
+	private static final int maxRecordsInPage = 0; // will be read from config file upon initialization.
 	private String curDB;
 	private String curDBFilePath;
 	private String dataBasesDataFilePath = "data/DataBases/";
@@ -108,5 +109,21 @@ public class DBApp implements Serializable
 	public boolean isValidTable(String colType)
 	{
 		return !colType.equals("java.lang.Boolean");
+	}
+	
+	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, FileNotFoundException, ClassNotFoundException, IOException
+	{
+		if(! dataBaseTables.containsKey(strTableName))
+		{
+			throw new DBAppException("Error: The table you are trying to insert into does not exist.");
+		}
+		
+		Table targetTable = dataBaseTables.get(strTableName);
+		targetTable.insert(htblColNameValue);
+	}
+	
+	public static int getMaxRecordsInPage()
+	{
+		return maxRecordsInPage;
 	}
 }

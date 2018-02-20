@@ -14,4 +14,24 @@ public class Page implements Serializable
 		this.records = new TreeSet<Record>();
 		this.pagePath = path;
 	}
+	
+	public void add(Record r)
+	{
+		records.add(r);
+	}
+	
+	public Record getLast()
+	{
+		return records.last();
+	}
+	
+	public int getSize()
+	{
+		return this.numberOfRecords;
+	}
+	
+	public String getPath()
+	{
+		return pagePath;
+	}
 }
