@@ -24,7 +24,7 @@ public class Table implements Serializable
 	private String filePath = "data/DataBases/";
 	private Hashtable<String, String> tableFormat;
 	
-	public Table(String name, Hashtable<String, String> format, String key, String dbName) throws FileNotFoundException
+	public Table(String name, Hashtable<String, String> format, String key, String dbName) throws IOException
 	{
 		this.tableName = name;
 		this.tableFormat = format;
@@ -34,12 +34,18 @@ public class Table implements Serializable
 		createPath();
 		saveMetaData();
 		this.numberOfPages = 1;
+		createPage();
 	}
 	
 	public void createPath()
 	{
 		File path = new File(this.filePath);
 		path.mkdirs();
+	}
+	
+	public void createPage() throws IOException
+	{
+		savePage(new Page(this.filePath + this.tableName + "1.class"));
 	}
 	
 	public void saveMetaData() throws FileNotFoundException
@@ -68,7 +74,7 @@ public class Table implements Serializable
 		ArrayList<Page> pages = new ArrayList<Page>();
 		for(int i = 1; i <= numberOfPages; i++)
 		{
-			String currentPagePath = filePath + this.tableName + i;
+			String currentPagePath = filePath + this.tableName + i + ".class";
 			File currentPageFile = new File(currentPagePath);
 			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
 			pages.add((Page) in.readObject());
@@ -85,9 +91,11 @@ public class Table implements Serializable
 				if(i == pages.size() - 1)
 				{
 					// create new page.
-					Page newPage = new Page(filePath + tableName + i+2);
-					newPage.add(insertion);
+					Page newPage = new Page(filePath + tableName + (i+2) + ".class");
+					newPage.add(current.getLast());
+					this.numberOfPages++;
 					savePage(newPage);
+					savePage(current);
 				}
 				else
 				{
@@ -110,11 +118,12 @@ public class Table implements Serializable
 		int keyIndex = 0;
 		String keyType = null;
 		
+		int i = 0;
 		while(columnNames.hasMoreElements()) // Checks if all columns in the insertion are found in the table.
 		{
 			String column = columnNames.nextElement();
 			
-			if(!htblColNameValue.containsKey(column))
+			if(!htblColNameValue.containsKey(column) && !column.equals("TouchDate"))
 			{
 				throw new DBAppException("Error: your insertion does not match the desired table's format.");
 			}
@@ -123,9 +132,10 @@ public class Table implements Serializable
 			
 			if(column.equals(key))
 			{
-				keyIndex = recordData.size() - 1;
+				keyIndex = i;
 				keyType  = tableFormat.get(column);
 			}
+			i++;
 		}
 		
 		Record insertion = new Record(recordData, keyType, keyIndex);
