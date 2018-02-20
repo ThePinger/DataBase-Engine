@@ -104,4 +104,16 @@ public class DBApp implements Serializable
 		this.dataBaseTables.put(strTableName, new Table(strTableName, htblColNameType, strClusteringKeyColumn, this.curDB));
 		saveTables();
 	}
+	
+	public void insertIntoTable(String strTableName, Hashtable<String, Object> htblColNameValue) throws DBAppException, FileNotFoundException, ClassNotFoundException, IOException
+	{
+		if(! dataBaseTables.containsKey(strTableName))
+		{
+			throw new DBAppException("Error: The table you are trying to insert into does not exist.");
+		}
+		
+		Table targetTable = dataBaseTables.get(strTableName);
+		targetTable.insert(htblColNameValue);
+	}
+	
 }
