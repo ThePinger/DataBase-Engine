@@ -43,8 +43,9 @@ public class Page implements Serializable
 	
 	public String toString()
 	{
+		String s = "";
 		for(Record r : this.records)
-			return r.toString();
-		return "";
+			s += r.toString() + "\n";
+		return s;
 	}
 }

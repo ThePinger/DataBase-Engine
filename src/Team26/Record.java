@@ -59,7 +59,8 @@ public class Record implements Serializable, Comparable<Record>
 	{
 		String s = "";
 		for(Object o : this.recordData)
-			s += o + " ";
+			if(o != null)
+				s += o + " ";
 		return s;
 	}
 }
