@@ -49,4 +49,9 @@ public class Record implements Serializable, Comparable<Record>
 		
 		return 0;
 	}
+	
+	public Object getKey()
+	{
+		return recordData.get(this.keyIndex);
+	}
 }

@@ -35,4 +35,9 @@ public class Page implements Serializable
 	{
 		return pagePath;
 	}
+	
+	public TreeSet<Record> getRecords()
+	{
+		return (TreeSet<Record>) records.clone();
+	}
 }

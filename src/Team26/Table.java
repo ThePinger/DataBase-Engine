@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.TreeSet;
 
 
 public class Table implements Serializable 
@@ -80,6 +81,10 @@ public class Table implements Serializable
 			pages.add((Page) in.readObject());
 			in.close();
 		}
+		
+		if(!uniqueKey(insertion, pages))
+			throw new DBAppException("Error : Entry does not have a unique key");
+		
 		int max = DBApp.getMaxRecordsInPage();
 		// insert row into first page, checks if it exceeded the maximum and updates the other pages accordingly.
 		for(int i = 0; i < pages.size(); i++)
@@ -109,6 +114,18 @@ public class Table implements Serializable
 				break;
 			}
 		}
+	}
+	
+	public boolean uniqueKey(Record r, ArrayList<Page> p)
+	{
+		for(int i = 0; i < p.size(); i++)
+		{
+			TreeSet<Record> tmp = p.get(i).getRecords();
+			while(!tmp.isEmpty())
+				if(tmp.pollFirst().getKey().equals(r.getKey()))
+					return false;
+		}
+		return true;
 	}
 	
 	public Record createRecord(Hashtable<String, Object> htblColNameValue) throws DBAppException
