@@ -7,11 +7,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.TreeSet;
+import java.util.Iterator;
+
 
 public class Table implements Serializable 
 {
@@ -21,7 +24,7 @@ public class Table implements Serializable
 	private String filePath = "data/DataBases/";
 	private Hashtable<String, String> tableFormat;
 	
-	public Table(String name, Hashtable<String, String> format, String key, String dbName)
+	public Table(String name, Hashtable<String, String> format, String key, String dbName) throws FileNotFoundException
 	{
 		this.tableName = name;
 		this.tableFormat = format;
@@ -29,6 +32,7 @@ public class Table implements Serializable
 		this.key = key;
 		this.filePath += dbName + "/" + this.tableName + "/";
 		createPath();
+		saveMetaData();
 		this.numberOfPages = 1;
 	}
 	
@@ -36,6 +40,25 @@ public class Table implements Serializable
 	{
 		File path = new File(this.filePath);
 		path.mkdirs();
+	}
+	
+	public void saveMetaData() throws FileNotFoundException
+	{
+		File path = new File(this.filePath + "metadata.csv");
+		PrintWriter pw = new PrintWriter(path);
+		Enumeration<String> colName = this.tableFormat.keys();
+		Iterator<String> colType =  this.tableFormat.values().iterator();
+		while(colType.hasNext())
+		{
+			String colname = colName.nextElement();
+			if(colname.equals(this.key))
+				pw.println(this.tableName + "," + colname + "," + colType.next() + "," + true + "," + false);
+			else
+				pw.println(this.tableName + "," + colname + "," + colType.next() + "," + false + "," + false);
+		}
+		
+		pw.flush();
+		pw.close();
 	}
 	
 	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException, FileNotFoundException, IOException, ClassNotFoundException
