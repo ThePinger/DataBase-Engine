@@ -107,6 +107,6 @@ public class DBApp implements Serializable
 	
 	public boolean isValidTable(String colType)
 	{
-		return !colType.equals("java.util.Boolean");
+		return !colType.equals("java.lang.Boolean");
 	}
 }
