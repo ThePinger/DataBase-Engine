@@ -122,7 +122,7 @@ public class DBApp implements Serializable
 	
 	public void readConfigFile() throws IOException
 	{
-		FileInputStream in = new FileInputStream("src/Config/DBApp.config");
+		FileInputStream in = new FileInputStream("config/DBApp.config");
 		dataBaseProperties = new Properties();
 		dataBaseProperties.load(in);
 		in.close();
