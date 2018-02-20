@@ -38,6 +38,48 @@ public class Table implements Serializable
 		path.mkdirs();
 	}
 	
+	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException, FileNotFoundException, IOException, ClassNotFoundException
+	{
+		Record insertion = createRecord(htblColNameValue);
+		
+		ArrayList<Page> pages = new ArrayList<Page>();
+		for(int i = 1; i <= numberOfPages; i++)
+		{
+			String currentPagePath = filePath + this.tableName + i;
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			pages.add((Page) in.readObject());
+			in.close();
+		}
+		int max = DBApp.getMaxRecordsInPage();
+		// insert row into first page, checks if it exceeded the maximum and updates the other pages accordingly.
+		for(int i = 0; i < pages.size(); i++)
+		{
+			Page current = pages.get(i);
+			current.add(insertion);
+			if(current.getSize() > max)
+			{
+				if(i == pages.size() - 1)
+				{
+					// create new page.
+					Page newPage = new Page(filePath + tableName + i+2);
+					newPage.add(insertion);
+					savePage(newPage);
+				}
+				else
+				{
+					insertion = current.getLast();
+					savePage(current);
+				}
+			}
+			else
+			{
+				savePage(current);
+				break;
+			}
+		}
+	}
+	
 	public Record createRecord(Hashtable<String, Object> htblColNameValue) throws DBAppException
 	{
 		ArrayList<Object> recordData = new ArrayList<Object>();
@@ -67,4 +109,12 @@ public class Table implements Serializable
 		return insertion;
 	}
 	
+	public void savePage(Page p) throws IOException
+	{
+		File pageFile = new File(p.getPath());
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(pageFile));
+		out.writeObject(p);
+		out.flush();
+		out.close();
+	}
 }
