@@ -21,11 +21,24 @@ public class Page implements Serializable
 		this.numberOfRecords++;
 	}
 	
-	public Record getLast()
+	public void remove(Record r)
 	{
-		return records.pollLast();
+		this.numberOfRecords--;
+		this.records.remove(r);
 	}
 	
+	public Record removeFirst()
+	{
+		this.numberOfRecords--;
+		return records.pollFirst();
+	}
+	
+	public Record removeLast()
+	{
+		this.numberOfRecords--;
+		return records.pollLast();
+	}
+
 	public int getSize()
 	{
 		return this.numberOfRecords;
