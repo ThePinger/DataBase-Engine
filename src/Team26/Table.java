@@ -173,6 +173,67 @@ public class Table implements Serializable
 		
 	}
 	
+	public void update(String strKey, Hashtable<String, Object> htblColNameValue) throws FileNotFoundException, IOException, ClassNotFoundException, DBAppException
+	{
+		boolean keyWillChange = false;
+		if(htblColNameValue.containsKey(this.key))
+			keyWillChange = true;
+		
+		//Load All Pages
+		ArrayList<Page> pages = new ArrayList<Page>();
+		for(int i = 1; i <= numberOfPages; i++)
+		{
+			String currentPagePath = filePath + this.tableName + i + ".class";
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			pages.add((Page) in.readObject());
+			in.close();
+		}
+		
+		Object newKey = htblColNameValue.get(this.key);
+		for(int i = 0; i < pages.size() && keyWillChange; i++)
+		{
+			TreeSet<Record> records = pages.get(i).getRecords();
+			while(!records.isEmpty())
+				if(records.pollFirst().getKey().equals(newKey))
+					throw new DBAppException("Error: Primary Key Exists");
+		}
+		
+		Hashtable<String, Object> newHashT = new Hashtable<>();
+		Enumeration<String> colNames = htblColNameValue.keys();
+		Enumeration<Object> values   = htblColNameValue.elements();
+		for(int i = 0; i < pages.size(); i++)
+		{
+			TreeSet<Record> records = pages.get(i).getRecords();
+			while(!records.isEmpty())
+				if((records.first().getKey() + "").equals(strKey))
+				{
+					newHashT = records.first().getValues();
+					while(colNames.hasMoreElements())
+						newHashT.put(colNames.nextElement(), values.nextElement());
+					
+					pages.get(i).remove(records.first());
+					for(int j = i + 1; j < pages.size(); j++)
+					{
+						pages.get(j - 1).add(pages.get(j).removeFirst());
+						savePage(pages.get(j - 1));
+					}
+					
+					if(pages.get(pages.size() - 1).getSize() == 0)
+					{
+						File f = new File(pages.get(pages.size() - 1).getPath());
+						f.delete();
+						this.numberOfPages--;
+					}
+					else savePage(pages.get(pages.size() - 1));
+					
+					insert(newHashT);
+					return;
+				}
+				else records.pollFirst();
+		}
+	}
+	
 	public boolean uniqueKey(Record r, ArrayList<Page> p)
 	{
 		for(int i = 0; i < p.size(); i++)

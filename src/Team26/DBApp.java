@@ -126,6 +126,16 @@ public class DBApp implements Serializable
 		saveTables();
 	}
 	
+	public void updateTable(String strTableName, String strKey, Hashtable<String,Object> htblColNameValue ) throws DBAppException, FileNotFoundException, ClassNotFoundException, IOException
+	{
+		if(!this.dataBaseTables.containsKey(strTableName))
+			throw new DBAppException("Error: The table does not exist");
+		
+		Table targetTable = this.dataBaseTables.get(strTableName);
+		targetTable.update(strKey, htblColNameValue);
+		saveTables();
+	}
+	
 	public void deleteFromTable(String strTableName, Hashtable<String,Object> htblColNameValue) throws DBAppException, FileNotFoundException, ClassNotFoundException, IOException
 	{
 		if(!this.dataBaseTables.containsKey(strTableName))
