@@ -116,6 +116,63 @@ public class Table implements Serializable
 		}
 	}
 	
+	public void delete(Hashtable<String, Object> htblColNameValue) throws DBAppException, FileNotFoundException, IOException, ClassNotFoundException
+	{
+		//Check Columns Available
+		Enumeration<String> columnNames = (Enumeration<String>) htblColNameValue.keys();
+		while(columnNames.hasMoreElements())
+			if(!this.tableFormat.containsKey(columnNames.nextElement()))
+				throw new DBAppException("Error: Column name does not exist");
+		
+		//Load All Pages
+		ArrayList<Page> pages = new ArrayList<Page>();
+		for(int i = 1; i <= numberOfPages; i++)
+		{
+			String currentPagePath = filePath + this.tableName + i + ".class";
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			pages.add((Page) in.readObject());
+			in.close();
+		}
+		
+		Object recordKey = htblColNameValue.get(this.key);
+		boolean recordRemoved = false;
+		for(int i = 0; i < pages.size(); i++)
+		{
+			if(recordRemoved)
+			{
+				pages.get(i - 1).add(pages.get(i).removeFirst());
+				savePage(pages.get(i - 1));
+			}
+			
+			TreeSet<Record> tmp = pages.get(i).getRecords();
+			while(!tmp.isEmpty() && !recordRemoved)
+			{
+				Record r = tmp.pollFirst();
+				if(r.getKey().equals(recordKey))
+				{
+					pages.get(i).remove(r);
+					recordRemoved = true;
+				}
+			}
+		}
+		
+		if(recordRemoved) 
+		{
+			if(pages.get(pages.size() - 1).getSize() == 0)
+			{
+				File f = new File(pages.get(pages.size() - 1).getPath());
+				f.delete();
+				this.numberOfPages--;
+			}
+			else savePage(pages.get(pages.size() - 1));
+		}
+		
+		if(!recordRemoved)
+			throw new DBAppException("Error: No Column with that ID");
+		
+	}
+	
 	public boolean uniqueKey(Record r, ArrayList<Page> p)
 	{
 		for(int i = 0; i < p.size(); i++)
