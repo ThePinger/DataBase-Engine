@@ -1,21 +1,22 @@
 package Team26;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 public class Record implements Serializable, Comparable<Record>
 {
-	private ArrayList<Object> recordData;
+	private Hashtable<String,Object> recordData;
 	private String keyType;
-	private int keyIndex;
+	private String keyCol;
 	
-	public Record(ArrayList<Object> data, String keyType, int keyIndex)
+	public Record(Hashtable<String,Object> data, String keyType, String keyCol)
 	{
 		this.recordData = data;
-		this.recordData.add(new Date());
+		this.recordData.put("TouchDate", new Date());
 		this.keyType = keyType;
-		this.keyIndex = keyIndex;
+		this.keyCol = keyCol;
 	}
 
 	@Override
@@ -27,22 +28,22 @@ public class Record implements Serializable, Comparable<Record>
 		
 		if(this.keyType.equals("java.lang.Integer") && o.keyType.equals("java.lang.Integer"))
 		{
-			Integer thisKey = (Integer) this.recordData.get(this.keyIndex);
-			Integer oKey = (Integer) o.recordData.get(o.keyIndex);
+			Integer thisKey = (Integer) this.recordData.get(this.keyCol);
+			Integer oKey = (Integer) o.recordData.get(o.keyCol);
 			
 			return thisKey.compareTo(oKey);
 		}
 		if(this.keyType.equals("java.lang.Double") && o.keyType.equals("java.lang.Double"))
 		{
-			Double thisKey = (Double) this.recordData.get(this.keyIndex);
-			Double oKey = (Double) o.recordData.get(o.keyIndex);
+			Double thisKey = (Double) this.recordData.get(this.keyCol);
+			Double oKey = (Double) o.recordData.get(o.keyCol);
 			
 			return thisKey.compareTo(oKey);
 		}
 		if(this.keyType.equals("java.lang.String") && o.keyType.equals("java.lang.String"))
 		{
-			String thisKey = (String) this.recordData.get(this.keyIndex);
-			String oKey = (String) o.recordData.get(o.keyIndex);
+			String thisKey = (String) this.recordData.get(this.keyCol);
+			String oKey = (String) o.recordData.get(o.keyCol);
 			
 			return thisKey.compareTo(oKey);
 		}
@@ -52,15 +53,20 @@ public class Record implements Serializable, Comparable<Record>
 	
 	public Object getKey()
 	{
-		return recordData.get(this.keyIndex);
+		return recordData.get(this.keyCol);
+	}
+	
+	public Hashtable<String, Object> getValues()
+	{
+		return (Hashtable<String, Object>) this.recordData.clone();
 	}
 	
 	public String toString()
 	{
 		String s = "";
-		for(Object o : this.recordData)
-			if(o != null)
-				s += o + " ";
+		Enumeration<Object> values = this.recordData.elements();
+		while(values.hasMoreElements())
+			s += values.nextElement() + " ";
 		return s;
 	}
 }

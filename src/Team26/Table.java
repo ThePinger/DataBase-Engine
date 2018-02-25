@@ -97,14 +97,14 @@ public class Table implements Serializable
 				{
 					// create new page.
 					Page newPage = new Page(filePath + tableName + (i+2) + ".class");
-					newPage.add(current.getLast());
+					newPage.add(current.removeLast());
 					this.numberOfPages++;
 					savePage(newPage);
 					savePage(current);
 				}
 				else
 				{
-					insertion = current.getLast();
+					insertion = current.removeLast();
 					savePage(current);
 				}
 			}
@@ -187,12 +187,10 @@ public class Table implements Serializable
 	
 	public Record createRecord(Hashtable<String, Object> htblColNameValue) throws DBAppException
 	{
-		ArrayList<Object> recordData = new ArrayList<Object>();
 		Enumeration<String> columnNames = (Enumeration<String>) tableFormat.keys();
-		int keyIndex = 0;
-		String keyType = null;
+		String keyCol = this.key;
+		String keyType = this.tableFormat.get(keyCol);
 		
-		int i = 0;
 		while(columnNames.hasMoreElements()) 
 		{
 			String column = columnNames.nextElement();
@@ -215,18 +213,9 @@ public class Table implements Serializable
 					throw new DBAppException("Error: One of the fields in your insertion does not have the right type.");
 				}
 			}
-			
-			recordData.add(htblColNameValue.get(column));
-			
-			if(column.equals(key))
-			{
-				keyIndex = i;
-				keyType  = tableFormat.get(column);
-			}
-			i++;
 		}
 		
-		Record insertion = new Record(recordData, keyType, keyIndex);
+		Record insertion = new Record(htblColNameValue, keyType, keyCol);
 		return insertion;
 	}
 	
