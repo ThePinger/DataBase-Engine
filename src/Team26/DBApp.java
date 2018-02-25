@@ -126,6 +126,16 @@ public class DBApp implements Serializable
 		saveTables();
 	}
 	
+	public void deleteFromTable(String strTableName, Hashtable<String,Object> htblColNameValue) throws DBAppException, FileNotFoundException, ClassNotFoundException, IOException
+	{
+		if(!this.dataBaseTables.containsKey(strTableName))
+			throw new DBAppException("Error: The table does not exist");
+		
+		Table targetTable = dataBaseTables.get(strTableName);
+		targetTable.delete(htblColNameValue);
+		saveTables();
+	}
+	
 	public void readConfigFile() throws IOException
 	{
 		FileInputStream in = new FileInputStream("config/DBApp.config");
