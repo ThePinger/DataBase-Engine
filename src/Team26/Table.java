@@ -295,6 +295,235 @@ public class Table implements Serializable
 		}
 	}
 	
+	public Iterator<String> select(String strColumnName, Object[] objarrValues, String[] strarrOperators) throws FileNotFoundException, ClassNotFoundException, IOException
+	{
+		ArrayList<String> results = new ArrayList<String>();
+		
+		if(this.hasBRINIndex(strColumnName))
+		{
+			if(strColumnName.equals(this.key))
+				results = selectUsingPrimaryIndex(strColumnName, objarrValues, strarrOperators);
+			
+			else
+			{
+				// TODO selectUsingSecondaryIndex()
+			}
+		}
+		
+		else
+			results = selectWithoutIndex(strColumnName, objarrValues, strarrOperators);
+		
+		return results.iterator();
+	}
+	
+	public ArrayList<String> selectWithoutIndex(String strColumnName, Object[] objarrValues, String[] strarrOperators) throws FileNotFoundException, IOException, ClassNotFoundException
+	{
+		ArrayList<String> results = new ArrayList<String>();
+		
+		// Load All Pages
+		ArrayList<Page> pages = new ArrayList<Page>();
+		for(int i = 1; i <= numberOfPages; i++)
+		{
+			String currentPagePath = filePath + this.tableName + i + ".class";
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			pages.add((Page) in.readObject());
+			in.close();
+		}
+		
+		// add records that satisfy given query to results
+		for(int i = 0; i < pages.size(); i++)
+		{
+			Page currentPage = pages.get(i);
+			int size = currentPage.getSize();
+			
+			for(int j = 0; j < size; j++)
+			{
+				Record currentRecord = currentPage.removeFirst();
+				
+				if(satisfiesQuery(currentRecord, objarrValues, strarrOperators, strColumnName))
+					results.add(currentRecord.toString());
+			}
+		}
+		
+		return results;
+	}
+	
+	public ArrayList<String> selectUsingPrimaryIndex(String strColumnName, Object[] objarrValues, String[] strarrOperators) throws FileNotFoundException, IOException, ClassNotFoundException
+	{
+		ArrayList<String> results = new ArrayList<String>();
+		
+		// load the BRIN for the specified column
+		ArrayList<ArrayList<BRINObject>> index = new ArrayList<ArrayList<BRINObject>>();
+		String indexPath = this.filePath + strColumnName + "/";
+		int BRINPages = this.brinPages.get(strColumnName);
+		
+		for(int i = 1; i <= BRINPages; i++)
+		{
+			String currentPagePath = indexPath + strColumnName + i + ".class";
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			index.add((ArrayList<BRINObject>) in.readObject());
+			in.close();
+		}
+		
+		// get references to all pages that should be loaded
+		ArrayList<Integer> pageReferences = new ArrayList<Integer>();
+		
+		for(int i = 0; i < index.size(); i++)
+		{
+			ArrayList<BRINObject> currentBRINPage = index.get(i);
+			
+			for(int j = 0; j < currentBRINPage.size(); j++)
+			{
+				BRINObject currentBRINObject = currentBRINPage.get(j);
+				
+				if(isInRange(currentBRINObject, objarrValues, strarrOperators, strColumnName))
+					pageReferences.add(currentBRINObject.getReferencePage());
+			}
+		}
+		
+		// load needed pages
+		ArrayList<Page> pages = new ArrayList<Page>();
+		
+		for(int i = 0; i < pageReferences.size(); i++)
+		{
+			int pageNumber = pageReferences.get(i);
+			String currentPagePath = filePath + this.tableName + pageNumber + ".class";
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			pages.add((Page) in.readObject());
+			in.close();
+		}
+		
+		// add records that satisfy given query to results
+		for(int i = 0; i < pages.size(); i++)
+		{
+			Page currentPage = pages.get(i);
+			int size = currentPage.getSize();
+			
+			for(int j = 0; j < size; j++)
+			{
+				Record currentRecord = currentPage.removeFirst();
+				
+				if(satisfiesQuery(currentRecord, objarrValues, strarrOperators, strColumnName))
+					results.add(currentRecord.toString());
+			}
+		}
+		
+		return results;
+		
+	}
+	
+	public boolean satisfiesQuery(Record record, Object[] objarrValues, String[] strarrOperators, String columnName)
+	{
+		
+		// returns true if the given record satisfies query
+		
+			String type = this.tableFormat.get(columnName);
+			Hashtable<String, Object> data = record.getValues();
+			boolean upperBound = false, lowerBound = false;
+			
+			if(type.equals("java.lang.String"))
+			{
+				String userMin = (String) objarrValues[0];
+				String userMax = (String) objarrValues[1];
+				String recordValue = (String) data.get(columnName);
+				
+				if( (strarrOperators[0].equals(">=") && recordValue.compareTo(userMin) >= 0) ||
+					(strarrOperators[0].equals(">")  && recordValue.compareTo(userMin) >  0) )
+						lowerBound = true;
+				
+				if( (strarrOperators[1].equals("<=") && recordValue.compareTo(userMax) <= 0) ||
+					(strarrOperators[1].equals("<")  && recordValue.compareTo(userMax) <  0) )
+						upperBound = true;
+			}
+			
+			if(type.equals("java.lang.Integer"))
+			{
+				Integer userMin = (Integer) objarrValues[0];
+				Integer userMax = (Integer) objarrValues[1];
+				Integer recordValue = (Integer) data.get(columnName);
+				
+				if( (strarrOperators[0].equals(">=") && recordValue.compareTo(userMin) >= 0) ||
+					(strarrOperators[0].equals(">")  && recordValue.compareTo(userMin) >  0) )
+						lowerBound = true;
+					
+				if( (strarrOperators[1].equals("<=") && recordValue.compareTo(userMax) <= 0) ||
+					(strarrOperators[1].equals("<")  && recordValue.compareTo(userMax) <  0) )
+						upperBound = true;
+			}
+				
+			if(type.equals("java.lang.Double"))
+			{
+				Double userMin = (Double) objarrValues[0];
+				Double userMax = (Double) objarrValues[1];
+				Double recordValue = (Double) data.get(columnName);
+				
+				if( (strarrOperators[0].equals(">=") && recordValue.compareTo(userMin) >= 0) ||
+					(strarrOperators[0].equals(">")  && recordValue.compareTo(userMin) >  0) )
+						lowerBound = true;
+					
+				if( (strarrOperators[1].equals("<=") && recordValue.compareTo(userMax) <= 0) ||
+					(strarrOperators[1].equals("<")  && recordValue.compareTo(userMax) <  0) )
+						upperBound = true;
+			}
+				
+			if(upperBound && lowerBound)
+				return true;
+				
+			return false;
+	}
+	
+	public boolean isInRange(BRINObject brin, Object[] objarrValues, String[] strarrOperators, String columnName)
+	{
+		
+		// returns true if the given query is in the BRINObject's range, returns false otherwise
+		
+		String type = this.tableFormat.get(columnName);
+		
+		if(type.equals("java.lang.String"))
+		{
+			String userMin = (String) objarrValues[0];
+			String userMax = (String) objarrValues[1];
+			String brinMin = (String) brin.getMin();
+			String brinMax = (String) brin.getMax();
+			
+			if(userMin.compareTo(brinMax) > 0 || userMax.compareTo(brinMin) < 0)
+				return false;
+			
+			return true;
+		}
+		
+		if(type.equals("java.lang.Integer"))
+		{
+			Integer userMin = (Integer) objarrValues[0];
+			Integer userMax = (Integer) objarrValues[1];
+			Integer brinMin = (Integer) brin.getMin();
+			Integer brinMax = (Integer) brin.getMax();
+			
+			if(userMin.compareTo(brinMax) > 0 || userMax.compareTo(brinMin) < 0)
+				return false;
+			
+			return true;
+		}
+		
+		if(type.equals("java.lang.Double"))
+		{
+			Double userMin = (Double) objarrValues[0];
+			Double userMax = (Double) objarrValues[1];
+			Double brinMin = (Double) brin.getMin();
+			Double brinMax = (Double) brin.getMax();
+			
+			if(userMin.compareTo(brinMax) > 0 || userMax.compareTo(brinMin) < 0)
+				return false;
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public boolean uniqueKey(Record r, ArrayList<Page> p)
 	{
 		for(int i = 0; i < p.size(); i++)

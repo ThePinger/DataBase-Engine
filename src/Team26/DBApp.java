@@ -8,9 +8,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Properties;
 
 public class DBApp implements Serializable
@@ -126,6 +128,18 @@ public class DBApp implements Serializable
 			targetTable.createBRINOnPrimaryKey(strColName);
 		
 		saveTables();
+	}
+	
+	public Iterator<String> selectFromTable(String strTableName, String strColumnName, Object[] objarrValues, String[] strarrOperators) throws DBAppException, FileNotFoundException, ClassNotFoundException, IOException
+	{
+		if(!this.dataBaseTables.containsKey(strTableName))
+			throw new DBAppException("Error: Table does not exist");
+		
+		Table targetTable = this.dataBaseTables.get(strTableName);
+		if(!targetTable.hasColumn(strColumnName))
+			throw new DBAppException("Error : Column does not exist");
+		
+		return targetTable.select(strColumnName, objarrValues, strarrOperators);
 	}
 	
 	public boolean isValidTable(String colType)
