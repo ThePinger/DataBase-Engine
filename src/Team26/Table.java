@@ -312,53 +312,158 @@ public class Table implements Serializable
 			if(!this.tableFormat.containsKey(columnNames.nextElement()))
 				throw new DBAppException("Error: Column name does not exist");
 		
-		//Load All Pages
-		ArrayList<Page> pages = new ArrayList<Page>();
-		for(int i = 1; i <= numberOfPages; i++)
+		if(this.brinPages.containsKey(this.key))
 		{
-			String currentPagePath = filePath + this.tableName + i + ".class";
-			File currentPageFile = new File(currentPagePath);
-			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
-			pages.add((Page) in.readObject());
-			in.close();
-		}
-		
-		Object recordKey = htblColNameValue.get(this.key);
-		boolean recordRemoved = false;
-		for(int i = 0; i < pages.size(); i++)
-		{
-			if(recordRemoved)
+			ArrayList<BRINObject>[] bpages = new ArrayList[this.brinPages.get(this.key) + 1];
+			for(int i = 1; i < bpages.length; i++)
 			{
-				pages.get(i - 1).add(pages.get(i).removeFirst());
-				savePage(pages.get(i - 1));
+				File curBRIN = new File(this.filePath + this.key + "/" + this.key + i + ".class");
+				ObjectInputStream in = new ObjectInputStream(new FileInputStream(curBRIN));
+				bpages[i] = (ArrayList<BRINObject>) in.readObject();
+				in.close();
 			}
 			
-			TreeSet<Record> tmp = pages.get(i).getRecords();
-			while(!tmp.isEmpty() && !recordRemoved)
+			int referencePage = -1;
+			loop : for(int i = 1; i < bpages.length; i++)
 			{
-				Record r = tmp.pollFirst();
-				if(r.getKey().equals(recordKey))
+				for(int j = 0; j < bpages[i].size(); j++)
 				{
-					pages.get(i).remove(r);
-					recordRemoved = true;
+					BRINObject tmp = bpages[i].get(j);
+				    if(this.tableFormat.get(this.key).equals("java.lang.String"))
+				    {
+				    		String max = (String) tmp.getMax();
+				    		String newIns = (String) htblColNameValue.get(this.key);
+				    		if(newIns.compareTo(max) <= 0)
+				    		{
+				    			referencePage = tmp.getReferencePage();
+				    			break loop;
+				    		}
+				    }
+				    else if(this.tableFormat.get(this.key).equals("java.lang.Integer"))
+				    {
+				    		int max = (Integer) tmp.getMax();
+				    		int newIns = (Integer) htblColNameValue.get(this.key);
+				    		if(newIns <= max)
+				    		{
+				    			referencePage = tmp.getReferencePage();
+				    			break loop;
+				    		}
+				    }
+				    else
+				    {
+				    		double max = (Double) tmp.getMax();
+				    		double newIns = (double) htblColNameValue.get(this.key);
+				    		if(newIns <= max)
+				    		{
+				    			referencePage = tmp.getReferencePage();
+				    			break loop;
+				    		}
+				    }
 				}
 			}
-		}
-		
-		if(recordRemoved) 
-		{
-			if(pages.get(pages.size() - 1).getSize() == 0)
+			
+			if(referencePage == -1)
+				throw new DBAppException("Error : No Column with that ID ");
+			else
 			{
-				File f = new File(pages.get(pages.size() - 1).getPath());
-				f.delete();
-				this.numberOfPages--;
+				boolean recordRemoved = false;
+				Object recordKey = htblColNameValue.get(this.key);
+				
+				String currentPagePath = filePath + this.tableName + referencePage + ".class";
+				File currentPageFile = new File(currentPagePath);
+				ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+				Page p = (Page) in.readObject();
+				
+				TreeSet<Record> tmp = p.getRecords();
+				while(!tmp.isEmpty())
+					if(tmp.first().getKey().equals(recordKey))
+					{
+						p.remove(tmp.first());
+						recordRemoved = true;
+						savePage(p);
+						break;
+					}
+					else tmp.pollFirst();
+				
+				if(recordRemoved)
+				{
+					for(int i = referencePage + 1; i <= this.numberOfPages; i++)
+					{
+						String prePagePath = this.filePath + this.tableName + (i - 1) + ".class";
+						File prePageFile = new File(prePagePath);
+						in = new ObjectInputStream(new FileInputStream(prePageFile));
+						Page pre = (Page) in.readObject();
+						currentPagePath = filePath + this.tableName + i + ".class";
+						currentPageFile = new File(currentPagePath);
+						in = new ObjectInputStream(new FileInputStream(currentPageFile));
+						p = (Page) in.readObject();
+						pre.add(p.removeFirst());
+						savePage(pre);
+						savePage(p);
+					}
+					
+					if(p.getSize() == 0)
+					{
+						new File(p.getPath()).delete();
+						this.numberOfPages--;
+					}
+					
+					createBRINOnPrimaryKey(this.key);
+				}
+				else 
+					throw new DBAppException("Error : No Column wit that ID");
 			}
-			else savePage(pages.get(pages.size() - 1));
+			
 		}
-		
-		if(!recordRemoved)
-			throw new DBAppException("Error: No Column with that ID");
-		
+		else
+		{
+			//Load All Pages
+			ArrayList<Page> pages = new ArrayList<Page>();
+			for(int i = 1; i <= numberOfPages; i++)
+			{
+				String currentPagePath = filePath + this.tableName + i + ".class";
+				File currentPageFile = new File(currentPagePath);
+				ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+				pages.add((Page) in.readObject());
+				in.close();
+			}
+			
+			Object recordKey = htblColNameValue.get(this.key);
+			boolean recordRemoved = false;
+			for(int i = 0; i < pages.size(); i++)
+			{
+				if(recordRemoved)
+				{
+					pages.get(i - 1).add(pages.get(i).removeFirst());
+					savePage(pages.get(i - 1));
+				}
+				
+				TreeSet<Record> tmp = pages.get(i).getRecords();
+				while(!tmp.isEmpty() && !recordRemoved)
+				{
+					Record r = tmp.pollFirst();
+					if(r.getKey().equals(recordKey))
+					{
+						pages.get(i).remove(r);
+						recordRemoved = true;
+					}
+				}
+			}
+			
+			if(recordRemoved) 
+			{
+				if(pages.get(pages.size() - 1).getSize() == 0)
+				{
+					File f = new File(pages.get(pages.size() - 1).getPath());
+					f.delete();
+					this.numberOfPages--;
+				}
+				else savePage(pages.get(pages.size() - 1));
+			}
+			
+			if(!recordRemoved)
+				throw new DBAppException("Error: No Column with that ID");
+		}	
 	}
 	
 	public void update(String strKey, Hashtable<String, Object> htblColNameValue) throws FileNotFoundException, IOException, ClassNotFoundException, DBAppException

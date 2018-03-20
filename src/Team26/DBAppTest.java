@@ -9,7 +9,6 @@ public class DBAppTest
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, IOException, DBAppException
 	{
-		System.out.println("c".compareTo("b"));
 		DBApp app = new DBApp();
 		String strTableName = "Student";
 		Hashtable htblColNameType = new Hashtable( ); 
@@ -67,6 +66,18 @@ public class DBAppTest
 		htblColNameValue.put("name", new String("Zaky Noor")); 
 		htblColNameValue.put("gpa", new Double( 0.88 ) ); 
 		app.insertIntoTable( strTableName , htblColNameValue );
+		
+		htblColNameValue.clear( ); 
+		htblColNameValue.put("id", new Integer( 2 )); 
+		htblColNameValue.put("name", new String("Zaky Noor")); 
+		htblColNameValue.put("gpa", new Double( 0.88 ) ); 
+		app.deleteFromTable( strTableName , htblColNameValue );
+		
+		htblColNameValue.clear( );
+		htblColNameValue.put("id", new Integer( 8 )); 
+		htblColNameValue.put("name", new String("Dalia Noor" ) ); 
+		htblColNameValue.put("gpa", new Double( 1.25 ) ); 
+		app.deleteFromTable( strTableName , htblColNameValue );
 		
 		app.print("Student");
 
