@@ -79,6 +79,21 @@ public class DBAppTest
 		htblColNameValue.put("name", new String("Dalia Noor" ) ); 
 		htblColNameValue.put("gpa", new Double( 1.25 ) ); 
 		app.deleteFromTable( strTableName , htblColNameValue );
+		htblColNameValue.clear( ); 
+		htblColNameValue.put("id", new Integer( 5 )); 
+		htblColNameValue.put("name", new String("Mo Noor" ) ); 
+		htblColNameValue.put("gpa", new Double( 0.95 ) ); 
+		app.insertIntoTable( strTableName , htblColNameValue );
+		htblColNameValue.clear( ); 
+		htblColNameValue.put("id", new Integer( 7 )); 
+		//htblColNameValue.put("name", new String("Mo Noor" ) ); 
+		//htblColNameValue.put("gpa", new Double( 0.95 ) ); 
+		app.updateTable( strTableName , "5", htblColNameValue );
+		htblColNameValue.clear( );
+		//htblColNameValue.put("id", new Integer( 9 )); 
+		htblColNameValue.put("name", new String("Dalia Noor" ) ); 
+		htblColNameValue.put("gpa", new Double( 1.25 ) ); 
+		app.updateTable( strTableName , "7", htblColNameValue );
 		
 		app.print("Student");
 		

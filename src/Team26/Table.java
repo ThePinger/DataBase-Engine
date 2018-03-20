@@ -24,7 +24,8 @@ public class Table implements Serializable
 	private String tableName;
 	private String filePath = "data/DataBases/";
 	private Hashtable<String, String> tableFormat;
-	private Hashtable<String, Integer> brinPages; 
+	private Hashtable<String, Integer> brinPages;
+	private boolean isUpdate;
 	
 	public Table(String name, Hashtable<String, String> format, String key, String dbName) throws IOException
 	{
@@ -171,7 +172,7 @@ public class Table implements Serializable
 				    			referencePage = tmp.getReferencePage();
 				    			break loop;
 				    		}
-				    		else if(newIns == max)
+				    		else if(newIns == max && !isUpdate)
 				    			throw new DBAppException("Error : Entry does not have a unique key");
 				    }
 				    else
@@ -183,7 +184,7 @@ public class Table implements Serializable
 				    			referencePage = tmp.getReferencePage();
 				    			break loop;
 				    		}
-				    		else if(newIns == max)
+				    		else if(newIns == max && !isUpdate)
 				    			throw new DBAppException("Error : Entry does not have a unique key");
 				    }
 				}
@@ -468,6 +469,130 @@ public class Table implements Serializable
 	
 	public void update(String strKey, Hashtable<String, Object> htblColNameValue) throws FileNotFoundException, IOException, ClassNotFoundException, DBAppException
 	{
+		isUpdate = true;
+		Enumeration<String> colNames = htblColNameValue.keys();
+		while(colNames.hasMoreElements())
+		{
+			if(hasBRINIndex(colNames.nextElement()))
+			{
+				updateWithIndex(strKey, htblColNameValue);
+				return;
+			}
+		}
+		updateWithoutIndex(strKey, htblColNameValue);
+		isUpdate = false;
+	}
+	
+	
+	public void updateWithIndex(String strKey, Hashtable<String, Object> htblColNameValue) throws FileNotFoundException, IOException, ClassNotFoundException, DBAppException
+	{
+		System.out.println("IndexUpdate");
+		boolean keyWillChange = false;
+		if(htblColNameValue.containsKey(this.key))
+			keyWillChange = true;
+		
+		String strColumnName = "";
+		Enumeration<String> colNames = htblColNameValue.keys();
+		
+		while(colNames.hasMoreElements())
+		{
+			String temp = colNames.nextElement();
+			
+			if(hasBRINIndex(temp))
+			{
+				strColumnName = temp;
+				break;
+			}
+		}
+		
+		Record target = null;
+		
+		// load the BRIN for the specified column
+		ArrayList<ArrayList<BRINObject>> index = new ArrayList<ArrayList<BRINObject>>();
+		String indexPath = this.filePath + strColumnName + "/";
+		int BRINPages = this.brinPages.get(strColumnName);
+		
+		for(int i = 1; i <= BRINPages; i++)
+		{
+			String currentPagePath = indexPath + strColumnName + i + ".class";
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			index.add((ArrayList<BRINObject>) in.readObject());
+			in.close();
+		}
+		
+		// get reference to the page that should be loaded
+		int pageReference = 0;
+		
+		String keyType = this.tableFormat.get(strColumnName);
+			
+		Object[] objarrValues = new Object[2];
+		
+		if(keyType.equals("java.lang.String"))
+		{
+			objarrValues[0] = strKey;
+			objarrValues[1] = strKey;
+		}
+		
+		if(keyType.equals("java.lang.Integer"))
+		{
+			objarrValues[0] = Integer.parseInt(strKey);
+			objarrValues[1] = Integer.parseInt(strKey);
+		}
+		
+		if(keyType.equals("java.lang.Double"))
+		{
+			objarrValues[0] = Double.parseDouble(strKey);
+			objarrValues[1] = Double.parseDouble(strKey);
+		}
+		
+		String[] strarrOperators = new String[2];
+		strarrOperators[0] = ">=";
+		strarrOperators[1] = "<=";
+		
+		for(int i = 0; i < index.size(); i++)
+		{
+			ArrayList<BRINObject> currentBRINPage = index.get(i);
+			
+			for(int j = 0; j < currentBRINPage.size(); j++)
+			{
+				BRINObject currentBRINObject = currentBRINPage.get(j);
+				
+				if(isInRange(currentBRINObject, objarrValues, strarrOperators, strColumnName))
+					pageReference = currentBRINObject.getReferencePage();
+			}
+		}
+		
+		// load needed page
+		Page page = null;
+		String currentPagePath = filePath + this.tableName + pageReference + ".class";
+		File currentPageFile = new File(currentPagePath);
+		ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+		page = ((Page) in.readObject());
+		in.close();
+		
+		// get the target record
+		int size = page.getSize();
+		for(int j = 0; j < size; j++)
+		{
+			Record currentRecord = page.removeFirst();
+			
+			if(satisfiesQuery(currentRecord, objarrValues, strarrOperators, strColumnName))
+				target = currentRecord;
+		}
+		
+		Hashtable<String, Object> targetData = target.getValues();
+		this.delete(targetData);
+		
+		targetData.putAll(htblColNameValue);
+		
+		this.insert(targetData);
+		
+	}
+	
+	public void updateWithoutIndex(String strKey, Hashtable<String, Object> htblColNameValue) throws FileNotFoundException, IOException, ClassNotFoundException, DBAppException
+	{
+		System.out.println("noIndexUpdate");
 		boolean keyWillChange = false;
 		if(htblColNameValue.containsKey(this.key))
 			keyWillChange = true;
