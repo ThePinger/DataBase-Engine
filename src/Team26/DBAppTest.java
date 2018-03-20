@@ -62,6 +62,24 @@ public class DBAppTest
 		
 		app.createBRINIndex(strTableName, "id");
 
+		htblColNameValue.clear( ); 
+		htblColNameValue.put("id", new Integer( 2 )); 
+		htblColNameValue.put("name", new String("Zaky Noor")); 
+		htblColNameValue.put("gpa", new Double( 0.88 ) ); 
+		app.insertIntoTable( strTableName , htblColNameValue );
+		
+		htblColNameValue.clear( ); 
+		htblColNameValue.put("id", new Integer( 2 )); 
+		htblColNameValue.put("name", new String("Zaky Noor")); 
+		htblColNameValue.put("gpa", new Double( 0.88 ) ); 
+		app.deleteFromTable( strTableName , htblColNameValue );
+		
+		htblColNameValue.clear( );
+		htblColNameValue.put("id", new Integer( 8 )); 
+		htblColNameValue.put("name", new String("Dalia Noor" ) ); 
+		htblColNameValue.put("gpa", new Double( 1.25 ) ); 
+		app.deleteFromTable( strTableName , htblColNameValue );
+		
 		app.print("Student");
 		
 		Object[] values = {3,4};
