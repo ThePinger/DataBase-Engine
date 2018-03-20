@@ -469,7 +469,7 @@ public class Table implements Serializable
 	
 	public void update(String strKey, Hashtable<String, Object> htblColNameValue) throws FileNotFoundException, IOException, ClassNotFoundException, DBAppException
 	{
-		isUpdate = true;
+		
 		Enumeration<String> colNames = htblColNameValue.keys();
 		while(colNames.hasMoreElements())
 		{
@@ -479,8 +479,10 @@ public class Table implements Serializable
 				return;
 			}
 		}
+		isUpdate = true;
 		updateWithoutIndex(strKey, htblColNameValue);
 		isUpdate = false;
+		
 	}
 	
 	
