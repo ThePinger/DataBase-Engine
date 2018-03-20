@@ -3,6 +3,7 @@ package Team26;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Hashtable;
+import java.util.Iterator;
 
 public class DBAppTest 
 {
@@ -62,6 +63,72 @@ public class DBAppTest
 		app.createBRINIndex(strTableName, "id");
 
 		app.print("Student");
-
+		
+		Object[] values = {3,4};
+		String[] operators = {">=", "<="};
+		Iterator<String> i = app.selectFromTable(strTableName, "id", values, operators);
+		System.out.println("(3 >= id <= 4):");
+		while(i.hasNext())
+			System.out.println(i.next());
+		
+		System.out.println();
+		operators[0] = ">";
+		operators[1] = "<=";
+		values[0] = 3;
+		values[1] = 4;
+		i = app.selectFromTable(strTableName, "id", values, operators);
+		System.out.println("(3 > id <= 4):");
+		while(i.hasNext())
+			System.out.println(i.next());
+		
+		System.out.println();
+		operators[0] = ">=";
+		operators[1] = "<";
+		values[0] = 3;
+		values[1] = 4;
+		i = app.selectFromTable(strTableName, "id", values, operators);
+		System.out.println("(3 >= id < 4):");
+		while(i.hasNext())
+			System.out.println(i.next());
+		
+		System.out.println();
+		values[0] = 4;
+		values[1] = 9;
+		operators[0] = ">";
+		operators[1] = "<";
+		i = app.selectFromTable(strTableName, "id", values, operators);
+		System.out.println("(4 > id < 9):");
+		while(i.hasNext())
+			System.out.println(i.next());
+		
+		System.out.println();
+		values[0] = "Ahmed Noor";
+		values[1] = "John Noor";
+		operators[0] = ">=";
+		operators[1] = "<=";
+		i = app.selectFromTable(strTableName, "name", values, operators);
+		System.out.println("(Ahmed Noor >= name <= John Noor):");
+		while(i.hasNext())
+			System.out.println(i.next());
+		
+		System.out.println();
+		values[0] = "Ahmed Noor";
+		values[1] = "Dalia Noor";
+		operators[0] = ">=";
+		operators[1] = "<=";
+		i = app.selectFromTable(strTableName, "name", values, operators);
+		System.out.println("(Ahmed Noor >= name <= Dalia Noor):");
+		while(i.hasNext())
+			System.out.println(i.next());
+		
+		System.out.println();
+		values[0] = 0.8;
+		values[1] = 1.25;
+		operators[0] = ">=";
+		operators[1] = "<=";
+		i = app.selectFromTable(strTableName, "gpa", values, operators);
+		System.out.println("(0.8 >= gpa <= 1.25):");
+		while(i.hasNext())
+			System.out.println(i.next());
 	}
 }
