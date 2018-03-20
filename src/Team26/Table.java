@@ -24,6 +24,7 @@ public class Table implements Serializable
 	private String tableName;
 	private String filePath = "data/DataBases/";
 	private Hashtable<String, String> tableFormat;
+	private Hashtable<String, Integer> brinPages; 
 	
 	public Table(String name, Hashtable<String, String> format, String key, String dbName) throws IOException
 	{
@@ -36,6 +37,7 @@ public class Table implements Serializable
 		saveMetaData();
 		this.numberOfPages = 1;
 		createPage();
+		this.brinPages = new Hashtable<>();
 	}
 	
 	public void createPath()
@@ -66,6 +68,21 @@ public class Table implements Serializable
 		
 		pw.flush();
 		pw.close();
+	}
+	
+	public String getKey()
+	{
+		return this.key;
+	}
+	
+	public boolean hasColumn(String colName)
+	{
+		return this.tableFormat.containsKey(colName);
+	}
+	
+	public boolean hasBRINIndex(String colName)
+	{
+		return this.brinPages.containsKey(colName);
 	}
 	
 	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException, FileNotFoundException, IOException, ClassNotFoundException
