@@ -58,6 +58,8 @@ public class DBAppTest
 		htblColNameValue.put("name", new String("Mo Noor" ) ); 
 		htblColNameValue.put("gpa", new Double( 0.95 ) ); 
 		app.deleteFromTable( strTableName , htblColNameValue );
+		
+		app.createBRINIndex(strTableName, "id");
 
 		app.print("Student");
 

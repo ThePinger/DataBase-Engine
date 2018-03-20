@@ -109,6 +109,25 @@ public class DBApp implements Serializable
 		saveTables();
 	}
 	
+	public void createBRINIndex(String strTableName, String strColName) throws DBAppException, FileNotFoundException, ClassNotFoundException, IOException
+	{
+		if(!this.dataBaseTables.containsKey(strTableName))
+			throw new DBAppException("Error : Table does not exist");
+		
+		Table targetTable = this.dataBaseTables.get(strTableName);
+		if(!targetTable.hasColumn(strColName))
+			throw new DBAppException("Error : Column does not exist");
+		
+		if(targetTable.hasBRINIndex(strColName))
+			throw new DBAppException("Error : Index already created");
+		
+		targetTable.createBRINPath(strColName);
+		if(targetTable.getKey().equals(strColName))
+			targetTable.createBRINOnPrimaryKey(strColName);
+		
+		saveTables();
+	}
+	
 	public boolean isValidTable(String colType)
 	{
 		return !colType.equals("java.lang.Boolean");
