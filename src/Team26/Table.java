@@ -115,7 +115,7 @@ public class Table implements Serializable
 			brinObjects.add(new BRINObject(tmp.first().getKey(), tmp.last().getKey(), i + 1));
 			saveBRINPage(brinObjects, path + curBRINPage + ".class");
 			
-			if(brinObjects.size() == brinSize)
+			if(brinObjects.size() == brinSize && i != pages.size() - 1)
 			{
 				curBRINPage++;
 				brinObjects = new ArrayList<>();
