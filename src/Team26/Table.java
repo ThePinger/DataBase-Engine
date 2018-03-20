@@ -133,46 +133,173 @@ public class Table implements Serializable
 	{
 		Record insertion = createRecord(htblColNameValue);
 		
-		ArrayList<Page> pages = new ArrayList<Page>();
-		for(int i = 1; i <= numberOfPages; i++)
+		if(this.brinPages.containsKey(this.key))
 		{
-			String currentPagePath = filePath + this.tableName + i + ".class";
-			File currentPageFile = new File(currentPagePath);
-			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
-			pages.add((Page) in.readObject());
-			in.close();
-		}
-		
-		if(!uniqueKey(insertion, pages))
-			throw new DBAppException("Error : Entry does not have a unique key");
-		
-		int max = DBApp.getMaxRecordsInPage();
-		// insert row into first page, checks if it exceeded the maximum and updates the other pages accordingly.
-		for(int i = 0; i < pages.size(); i++)
-		{
-			Page current = pages.get(i);
-			current.add(insertion);
-			if(current.getSize() > max)
+			ArrayList<BRINObject>[] bpages = new ArrayList[this.brinPages.get(this.key) + 1];
+			for(int i = 1; i < bpages.length; i++)
 			{
-				if(i == pages.size() - 1)
+				File curBRIN = new File(this.filePath + this.key + "/" + this.key + i + ".class");
+				ObjectInputStream in = new ObjectInputStream(new FileInputStream(curBRIN));
+				bpages[i] = (ArrayList<BRINObject>) in.readObject();
+				in.close();
+			}
+			
+			int referencePage = -1;
+			loop : for(int i = 1; i < bpages.length; i++)
+			{
+				for(int j = 0; j < bpages[i].size(); j++)
 				{
-					// create new page.
-					Page newPage = new Page(filePath + tableName + (i+2) + ".class");
-					newPage.add(current.removeLast());
+					BRINObject tmp = bpages[i].get(j);
+				    if(this.tableFormat.get(this.key).equals("java.lang.String"))
+				    {
+				    		String max = (String) tmp.getMax();
+				    		String newIns = (String) insertion.getKey();
+				    		if(newIns.compareTo(max) < 0)
+				    		{
+				    			referencePage = tmp.getReferencePage();
+				    			break loop;
+				    		}
+				    		else if(newIns.compareTo(max) == 0)
+				    			throw new DBAppException("Error : Entry does not have a unique key");
+				    }
+				    else if(this.tableFormat.get(this.key).equals("java.lang.Integer"))
+				    {
+				    		int max = (Integer) tmp.getMax();
+				    		int newIns = (Integer) insertion.getKey();
+				    		if(newIns < max)
+				    		{
+				    			referencePage = tmp.getReferencePage();
+				    			break loop;
+				    		}
+				    		else if(newIns == max)
+				    			throw new DBAppException("Error : Entry does not have a unique key");
+				    }
+				    else
+				    {
+				    		double max = (Double) tmp.getMax();
+				    		double newIns = (double) insertion.getKey();
+				    		if(newIns < max)
+				    		{
+				    			referencePage = tmp.getReferencePage();
+				    			break loop;
+				    		}
+				    		else if(newIns == max)
+				    			throw new DBAppException("Error : Entry does not have a unique key");
+				    }
+				}
+			}
+			
+			if(referencePage == -1)
+			{
+				String currentPagePath = filePath + this.tableName + this.numberOfPages + ".class";
+				File currentPageFile = new File(currentPagePath);
+				ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+				Page p = (Page) in.readObject();
+				in.close();
+				
+				if(p.getSize() == DBApp.getMaxRecordsInPage())
+				{
 					this.numberOfPages++;
+					Page newPage = new Page(filePath + tableName + this.numberOfPages + ".class");
+					newPage.add(insertion);
 					savePage(newPage);
-					savePage(current);
 				}
 				else
 				{
-					insertion = current.removeLast();
-					savePage(current);
+					p.add(insertion);
+					savePage(p);
 				}
+				
+				createBRINOnPrimaryKey(this.key);
 			}
 			else
 			{
-				savePage(current);
-				break;
+				String currentPagePath = filePath + this.tableName + referencePage + ".class";
+				File currentPageFile = new File(currentPagePath);
+				ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+				Page p = (Page) in.readObject();
+				in.close();
+				TreeSet<Record> rec = p.getRecords();
+				while(!rec.isEmpty())
+					if(rec.pollFirst().getKey().equals(insertion.getKey()))
+						throw new DBAppException("Error : Entry does not have a unique key");
+				
+				p.add(insertion);
+				if(p.getSize() > DBApp.getMaxRecordsInPage())
+					insertion = p.removeLast();
+				else insertion = null;
+				savePage(p);
+				
+				for(int i = referencePage + 1; i <= this.numberOfPages && insertion != null; i++)
+				{
+					currentPagePath = filePath + this.tableName + i + ".class";
+					currentPageFile = new File(currentPagePath);
+					in = new ObjectInputStream(new FileInputStream(currentPageFile));
+					p = (Page) in.readObject();
+					in.close();
+					p.add(insertion);
+					if(p.getSize() > DBApp.getMaxRecordsInPage())
+						insertion = p.removeLast();
+					else insertion = null;
+					savePage(p);
+				}
+				
+				if(insertion != null)
+				{
+					this.numberOfPages++;
+					Page newPage = new Page(filePath + tableName + this.numberOfPages + ".class");
+					newPage.add(insertion);
+					savePage(newPage);
+				}
+				
+				createBRINOnPrimaryKey(this.key);
+			}
+		}
+		else
+		{
+			
+			ArrayList<Page> pages = new ArrayList<Page>();
+			for(int i = 1; i <= numberOfPages; i++)
+			{
+				String currentPagePath = filePath + this.tableName + i + ".class";
+				File currentPageFile = new File(currentPagePath);
+				ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+				pages.add((Page) in.readObject());
+				in.close();
+			}
+			
+			if(!uniqueKey(insertion, pages))
+				throw new DBAppException("Error : Entry does not have a unique key");
+			
+			int max = DBApp.getMaxRecordsInPage();
+			int brinSize = DBApp.getBRINSize();
+			// insert row into first page, checks if it exceeded the maximum and updates the other pages accordingly.
+			for(int i = 0; i < pages.size(); i++)
+			{
+				Page current = pages.get(i);
+				current.add(insertion);
+				if(current.getSize() > max)
+				{
+					if(i == pages.size() - 1)
+					{
+						// create new page.
+						Page newPage = new Page(filePath + tableName + (i+2) + ".class");
+						newPage.add(current.removeLast());
+						this.numberOfPages++;
+						savePage(newPage);
+						savePage(current);
+					}
+					else
+					{
+						insertion = current.removeLast();
+						savePage(current);
+					}
+				}
+				else
+				{
+					savePage(current);
+					break;
+				}
 			}
 		}
 	}

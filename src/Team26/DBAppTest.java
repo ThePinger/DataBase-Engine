@@ -9,6 +9,7 @@ public class DBAppTest
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, IOException, DBAppException
 	{
+		System.out.println("c".compareTo("b"));
 		DBApp app = new DBApp();
 		String strTableName = "Student";
 		Hashtable htblColNameType = new Hashtable( ); 
@@ -61,6 +62,12 @@ public class DBAppTest
 		
 		app.createBRINIndex(strTableName, "id");
 
+		htblColNameValue.clear( ); 
+		htblColNameValue.put("id", new Integer( 2 )); 
+		htblColNameValue.put("name", new String("Zaky Noor")); 
+		htblColNameValue.put("gpa", new Double( 0.88 ) ); 
+		app.insertIntoTable( strTableName , htblColNameValue );
+		
 		app.print("Student");
 
 	}
