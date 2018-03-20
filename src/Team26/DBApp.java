@@ -15,7 +15,7 @@ import java.util.Properties;
 
 public class DBApp implements Serializable
 {
-	private static int maxRecordsInPage = 0; // will be read from config file upon initialization.
+	private static int maxRecordsInPage, brinSize; // will be read from config file upon initialization.
 	private String curDB;
 	private String curDBFilePath;
 	private String dataBasesDataFilePath = "data/DataBases/";
@@ -172,11 +172,17 @@ public class DBApp implements Serializable
 		dataBaseProperties.load(in);
 		in.close();
 		maxRecordsInPage = Integer.parseInt((String)dataBaseProperties.get("MaximumRowsCountinPage"));
+		brinSize = Integer.parseInt((String) this.dataBaseProperties.get("BRINSize"));
 	}
 	
 	public static int getMaxRecordsInPage()
 	{
 		return maxRecordsInPage;
+	}
+	
+	public static int getBRINSize()
+	{
+		return brinSize;
 	}
 	
 	public void print(String table) throws ClassNotFoundException, IOException

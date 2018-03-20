@@ -95,7 +95,7 @@ public class Table implements Serializable
 	{
 		this.brinPages.put(colName, 1);
 		String path = this.filePath + colName + "/" + colName;
-		int brinSize = 15;
+		int brinSize = DBApp.getBRINSize();
 		
 		ArrayList<Page> pages = new ArrayList<Page>();
 		for(int i = 1; i <= numberOfPages; i++)
@@ -123,6 +123,7 @@ public class Table implements Serializable
 			}
 		}
 		
+		//TEST
 		for(int i = 0; i < brinObjects.size(); i++)
 			System.out.println(brinObjects.get(i).getMin() + " " + brinObjects.get(i).getMax());
 	}
