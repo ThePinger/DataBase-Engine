@@ -46,6 +46,12 @@ public class Table implements Serializable
 		path.mkdirs();
 	}
 	
+	public void createBRINPath(String colName)
+	{
+		File path = new File(this.filePath + colName);
+		path.mkdirs();
+	}
+	
 	public void createPage() throws IOException
 	{
 		savePage(new Page(this.filePath + this.tableName + "1.class"));
@@ -84,6 +90,43 @@ public class Table implements Serializable
 	{
 		return this.brinPages.containsKey(colName);
 	}
+	
+	public void createBRINOnPrimaryKey(String colName) throws FileNotFoundException, IOException, ClassNotFoundException
+	{
+		this.brinPages.put(colName, 1);
+		String path = this.filePath + colName + "/" + colName;
+		int brinSize = 15;
+		
+		ArrayList<Page> pages = new ArrayList<Page>();
+		for(int i = 1; i <= numberOfPages; i++)
+		{
+			String currentPagePath = filePath + this.tableName + i + ".class";
+			File currentPageFile = new File(currentPagePath);
+			ObjectInputStream in = new ObjectInputStream(new FileInputStream(currentPageFile));
+			pages.add((Page) in.readObject());
+			in.close();
+		}
+		
+		int curBRINPage = 1;
+		ArrayList<BRINObject> brinObjects = new ArrayList<>();
+		for(int i = 0; i < pages.size(); i++)
+		{
+			TreeSet<Record> tmp = pages.get(i).getRecords();
+			brinObjects.add(new BRINObject(tmp.first().getKey(), tmp.last().getKey(), i + 1));
+			saveBRINPage(brinObjects, path + curBRINPage + ".class");
+			
+			if(brinObjects.size() == brinSize)
+			{
+				curBRINPage++;
+				brinObjects = new ArrayList<>();
+				this.brinPages.put(colName, curBRINPage);
+			}
+		}
+		
+		for(int i = 0; i < brinObjects.size(); i++)
+			System.out.println(brinObjects.get(i).getMin() + " " + brinObjects.get(i).getMax());
+	}
+	
 	
 	public void insert(Hashtable<String, Object> htblColNameValue) throws DBAppException, FileNotFoundException, IOException, ClassNotFoundException
 	{
@@ -302,6 +345,15 @@ public class Table implements Serializable
 		File pageFile = new File(p.getPath());
 		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(pageFile));
 		out.writeObject(p);
+		out.flush();
+		out.close();
+	}
+	
+	public void saveBRINPage(ArrayList<BRINObject> obj, String path) throws FileNotFoundException, IOException
+	{
+		File brinPageFile = new File(path);
+		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(brinPageFile));
+		out.writeObject(obj);
 		out.flush();
 		out.close();
 	}
